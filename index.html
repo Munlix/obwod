@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gra: Obwód Elektryczny</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap');
+
+        :root {
+            --primary-color: #007bff; /* Nowy niebieski */
+            --secondary-color: #6c757d; /* Szary */
+            --text-color: #212529; /* Ciemniejszy tekst */
+            --bg-color: #e9ecef; /* Jasnoszary */
+            --card-bg: #ffffff;
+            --border-radius: 12px;
+            --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 960px;
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 30px;
+            min-height: 750px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #dee2e6;
+        }
+        
+        .title-bar {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 15px 25px;
+            border-radius: var(--border-radius);
+            margin-bottom: 25px;
+            box-shadow: var(--box-shadow);
+        }
+
+        .title-bar h1 {
+            font-size: 2.2rem;
+            margin: 0;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background-color: var(--card-bg);
+            padding: 40px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            max-width: 600px;
+            width: 90%;
+            animation: fadeIn 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            position: relative;
+        }
+        
+        .modal-content h2 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: var(--primary-color);
+        }
+
+        .modal-content p {
+            font-size: 1.1rem;
+            line-height: 1.7;
+            color: #555;
+        }
+
+        .modal-content .close-button {
+            position: absolute;
+            top: 20px;
+            right: 25px;
+            background: none;
+            border: none;
+            font-size: 2rem;
+            cursor: pointer;
+            color: #ccc;
+            transition: color 0.2s ease;
+        }
+
+        .modal-content .close-button:hover {
+            color: #aaa;
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .button, button {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 14px 28px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            border: none;
+            cursor: pointer;
+            margin: 5px;
+            display: inline-block;
+        }
+
+        .button:hover, button:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            background-color: #0056b3;
+        }
+
+        .button.secondary, button.secondary {
+            background-color: var(--secondary-color);
+            color: white;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .button.secondary:hover, button.secondary:hover {
+            background-color: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        #code-input-modal input, #admin-input-modal input {
+            width: 100%;
+            padding: 12px;
+            font-size: 1.2rem;
+            text-align: center;
+            border: 2px solid #ced4da;
+            border-radius: var(--border-radius);
+            margin-top: 15px;
+            transition: border-color 0.2s ease;
+        }
+
+        #code-input-modal input:focus, #admin-input-modal input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .color-palette {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .color-option {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 4px solid transparent;
+            transition: transform 0.2s, border-color 0.2s;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .color-option.selected {
+            border-color: var(--primary-color);
+            transform: scale(1.15);
+        }
+
+        .task-options {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .task-option {
+            background-color: var(--card-bg);
+            padding: 25px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            width: 280px;
+            text-align: center;
+            border: 1px solid #dee2e6;
+        }
+
+        .task-option:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .task-option h3 {
+            font-size: 1.6rem;
+            margin-bottom: 10px;
+            color: var(--text-color);
+        }
+
+        .task-option .illustration {
+            font-size: 5rem;
+            margin-bottom: 15px;
+            line-height: 1;
+        }
+        
+        .circuit-display {
+            width: 100%;
+            min-height: 250px;
+            border: 2px dashed #ced4da;
+            border-radius: var(--border-radius);
+            position: relative;
+            margin-top: 30px;
+            display: grid;
+            grid-template-columns: 1fr 100px 1fr;
+            grid-template-rows: 100px 1fr 100px;
+            gap: 0;
+            align-items: center;
+            justify-items: center;
+            background-color: #f8f9fa;
+            padding: 20px;
+            transition: all 0.5s ease;
+        }
+        
+        .c1 { grid-column: 1; grid-row: 1; }
+        .c2 { grid-column: 3; grid-row: 1; }
+        .c3 { grid-column: 3; grid-row: 3; }
+        .c4 { grid-column: 1; grid-row: 3; }
+        .c5 { grid-column: 2; grid-row: 2; }
+        
+        .w1 { grid-column: 1; grid-row: 2; width: 10px; height: 100%; }
+        .w2 { grid-column: 2; grid-row: 1; width: 100%; height: 10px; }
+        .w3 { grid-column: 3; grid-row: 2; width: 10px; height: 100%; }
+        .w4 { grid-column: 2; grid-row: 3; width: 100%; height: 10px; }
+        
+        .circuit-component {
+            font-size: 3.5rem;
+            text-align: center;
+            animation: popIn 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            transition: transform 0.3s ease;
+        }
+        
+        .circuit-component:hover {
+            transform: scale(1.1);
+        }
+        
+        .circuit-component.wire-segment {
+            font-size: 2rem;
+            animation: none;
+            width: 100%;
+            height: 10px;
+            border-radius: 5px;
+        }
+        .circuit-component.wire-segment-horizontal {
+            width: 100%;
+            height: 10px;
+        }
+        .circuit-component.wire-segment-vertical {
+            width: 10px;
+            height: 100%;
+        }
+        
+
+        .confetti-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 100;
+        }
+
+        .confetti {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background-color: #ff0;
+            opacity: 0;
+            animation: confetti-fall linear infinite;
+        }
+        
+        .fire-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 100;
+        }
+
+        .fire-particle {
+            position: absolute;
+            width: 25px;
+            height: 25px;
+            background: rgba(255, 69, 0, 0.6);
+            border-radius: 50%;
+            animation: burn-out linear infinite;
+            filter: blur(8px);
+        }
+
+        .error-message {
+            margin-top: 15px;
+            font-size: 1.2rem;
+            color: #dc3545;
+            font-weight: 600;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes popIn {
+            from { transform: scale(0.5); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes confetti-fall {
+            0% { transform: translateY(-100px) rotateZ(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotateZ(720deg); opacity: 0; }
+        }
+        
+        @keyframes burn-out {
+            0% { transform: scale(0.5); opacity: 0.8; top: 100%; left: 50%; }
+            100% { transform: scale(1.5) translateY(-80px) translateX(20px); opacity: 0; }
+        }
+
+        .controls {
+            margin-top: 25px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+    </style>
+</head>
+<body>
+    <div id="game" class="game-container">
+        <!-- Game content will be dynamically rendered here by JavaScript -->
+    </div>
+
+    <!-- Modals -->
+    <div id="tutorial-modal" class="modal hidden">
+        <div class="modal-content">
+            <button class="close-button" onclick="skipTutorial()">×</button>
+            <h2>Witaj w grze Obwód Elektryczny!</h2>
+            <p><strong>Czym jest obwód elektryczny?</strong></p>
+            <p>To zamknięta ścieżka, po której prąd może swobodnie przepływać. Aby obwód działał, musi mieć źródło prądu (np. baterię) i przewody (kabel, miedź), które połączą wszystkie elementy, na przykład włącznik i żarówkę.</p>
+            <p><strong>Jak grać?</strong></p>
+            <p>W każdym etapie będziesz wybierać jeden element do swojego obwodu. Poprawne wybory i wykonanie zadań pozwolą Ci zbudować działający obwód elektryczny. Po każdym zadaniu kadrowiec będzie musiał wpisać specjalny kod, aby potwierdzić jego wykonanie. Powodzenia!</p>
+            <div class="modal-buttons">
+                <button onclick="startColorSelection()">Zaczynamy!</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="code-input-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2>Wprowadź kod kadrowca</h2>
+            <p id="code-message">Kadrowiec, proszę potwierdź wykonanie zadania, wpisując kod.</p>
+            <input type="password" id="code-input" placeholder="Wpisz kod..." oninput="this.value = this.value.replace(/[^0-9]/g, '');" maxlength="4">
+            <p id="code-error" class="error-message hidden"></p>
+            <div class="modal-buttons">
+                <button onclick="submitCode()">Potwierdź</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="admin-input-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2>Błąd: 3 nieudane próby</h2>
+            <p>Kadrowiec trzykrotnie wprowadził zły kod. Proszę skontaktuj się z administratorem, aby uzyskać specjalne hasło.</p>
+            <input type="password" id="admin-input" placeholder="Wprowadź hasło administratora..." oninput="this.value = this.value.replace(/[^0-9]/g, '');" maxlength="4">
+            <p id="admin-error" class="error-message hidden"></p>
+            <div class="modal-buttons">
+                <button onclick="submitAdminCode()">Wprowadź hasło</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="task-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2 id="task-title"></h2>
+            <p id="task-description"></p>
+            <div class="modal-buttons">
+                <button onclick="showCodeModal()">Zadanie wykonane!</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const KADROWIEC_CODE = '1234';
+        const ADMIN_CODE = '5678';
+        const gameEl = document.getElementById('game');
+        
+        let gameState = {
+            stage: 'tutorial',
+            wireColor: '#000',
+            chosenComponents: [],
+            correctChoices: [],
+            incorrectCodeAttempts: 0,
+            hasDoubleWire: false,
+            currentTask: null,
+            maxAttempts: 3,
+            history: []
+        };
+
+        const components = {
+            battery: { name: "Bateria", icon: '🔋', isCorrect: true, task: 'Zbuduj domek z kart.' },
+            switch: { name: "Włącznik/Wyłącznik", icon: '🎚️', isCorrect: false, task: 'Zbuduj domek z kart.' },
+            conductor: { name: "Kawałek kabla", icon: '⛓️', isCorrect: true, task: 'Z swoich ciał napiszcie na podłodze dużą literę K.' },
+            motor: { name: "Motor ręczny", icon: '⚙️', isCorrect: true, task: 'Umyjcie ręce.' },
+            singleWire: { name: "Pojedynczy kabel", icon: '🪡', isCorrect: false, task: 'Z rzeczy znalezionych w lesie (patyki, liście, kwiaty) ułóżcie obrazek na ziemi.' },
+            doubleWire: { name: "Podwójny kabel", icon: '🧶', isCorrect: true, task: 'Z rzeczy znalezionych w lesie (patyki, liście, kwiaty) ułóżcie obrazek na ziemi.' },
+            lightBulb: { name: "Żarówka", icon: '💡', isCorrect: true, task: 'Znajdźcie w lesie pluszaka lub piłkę.' },
+            finalSwitch: { name: "Włącznik/Wyłącznik", icon: '🎚️', isCorrect: false, task: 'Znajdźcie w lesie pluszaka lub piłkę.' },
+        };
+        
+        function render() {
+            gameEl.innerHTML = `
+                <div class="title-bar">
+                    <h1>Gra: Obwód Elektryczny</h1>
+                </div>
+                <div id="game-content"></div>
+                <div id="game-controls" class="controls hidden">
+                    <button id="back-button" onclick="goBack()" class="secondary">Wróć</button>
+                    <button id="reset-button" onclick="resetGame()" class="secondary">Rozpocznij od nowa</button>
+                </div>
+            `;
+            
+            const contentEl = document.getElementById('game-content');
+            document.querySelectorAll('.modal').forEach(m => m.classList.add('hidden'));
+            
+            switch(gameState.stage) {
+                case 'tutorial':
+                    document.getElementById('tutorial-modal').classList.remove('hidden');
+                    break;
+                case 'color_selection':
+                    renderColorSelection(contentEl);
+                    break;
+                case 'task1_choice':
+                    renderTaskChoice(contentEl, 'task1', [components.battery, components.switch]);
+                    showControls();
+                    break;
+                case 'task2_choice':
+                    renderTaskChoice(contentEl, 'task2', [components.conductor]);
+                    showControls();
+                    break;
+                case 'task3_choice':
+                    renderTaskChoice(contentEl, 'task3', [components.motor]);
+                    showControls();
+                    break;
+                case 'task4_choice':
+                    renderTaskChoice(contentEl, 'task4', [components.singleWire, components.doubleWire]);
+                    showControls();
+                    break;
+                case 'task5_choice':
+                    renderTaskChoice(contentEl, 'task5', [components.lightBulb, components.finalSwitch]);
+                    showControls();
+                    break;
+                case 'final_test':
+                    renderFinalTest(contentEl);
+                    showControls();
+                    break;
+            }
+        }
+        
+        function showControls() {
+             document.getElementById('game-controls').classList.remove('hidden');
+        }
+
+        function renderColorSelection(parentEl) {
+            parentEl.innerHTML = `
+                <div class="text-center">
+                    <h2 class="text-3xl font-bold mb-4">Wybierz kolor przewodu</h2>
+                    <p class="mb-6">Wybierz jeden z dostępnych kolorów dla swojego obwodu. Pamiętaj, aby tło nie zlewało się z kolorem przewodu!</p>
+                    <div class="color-palette">
+                        <div class="color-option" style="background-color: #000;" onclick="selectColor('#000')"></div>
+                        <div class="color-option" style="background-color: #007bff;" onclick="selectColor('#007bff')"></div>
+                        <div class="color-option" style="background-color: #28a745;" onclick="selectColor('#28a745')"></div>
+                        <div class="color-option" style="background-color: #dc3545;" onclick="selectColor('#dc3545')"></div>
+                        <div class="color-option" style="background-color: #ffc107;" onclick="selectColor('#ffc107')"></div>
+                        <div class="color-option" style="background-color: #f8f9fa;" onclick="selectColor('#f8f9fa')"></div>
+                        <div class="color-option" style="background-color: #6f42c1;" onclick="selectColor('#6f42c1')"></div>
+                    </div>
+                    <button id="start-button" class="mt-8" disabled>Start</button>
+                </div>
+            `;
+            document.getElementById('start-button').addEventListener('click', startTask1);
+            if (gameState.wireColor) {
+                document.querySelector(`.color-option[style*="${gameState.wireColor}"]`).classList.add('selected');
+                document.getElementById('start-button').disabled = false;
+            }
+        }
+
+        function renderTaskChoice(parentEl, taskName, options) {
+            let title = '';
+            let description = '';
+            if (taskName === 'task1') {
+                title = 'Pierwszy element obwodu';
+                description = 'Co będzie źródłem prądu?';
+            } else if (taskName === 'task2') {
+                title = 'Następny element obwodu';
+                description = 'Potrzebujemy czegoś, co przewodzi prąd.';
+            } else if (taskName === 'task3') {
+                title = 'Odkrycie!';
+                description = 'Leżąc na podłodze, jedno z dzieci znalazło mały motor ręczny, który ładuje baterie. Aby go zdobyć, musicie...';
+            } else if (taskName === 'task4') {
+                title = 'Jaki kabel wybieracie?';
+                description = 'Potrzebujecie kolejnego kabla. Czy będzie pojedynczy, czy podwójny?';
+            } else if (taskName === 'task5') {
+                title = 'Ostatni element';
+                description = 'Co zamontujecie, aby obwód zadziałał?';
+            }
+            
+            const circuitHTML = buildSquareCircuit();
+
+            parentEl.innerHTML = `
+                <div class="text-center">
+                    <h2 class="text-3xl font-bold mb-4">${title}</h2>
+                    <p class="mb-6">${description}</p>
+                    <div class="task-options">
+                        ${options.map(option => `
+                            <div class="task-option" onclick="handleTaskChoice('${taskName}', '${option.name}')">
+                                <div class="illustration">${option.icon}</div>
+                                <h3>${option.name}</h3>
+                            </div>
+                        `).join('')}
+                    </div>
+                    ${circuitHTML}
+                </div>
+            `;
+        }
+        
+        function buildSquareCircuit() {
+            const components = gameState.chosenComponents;
+            const wireColor = gameState.wireColor;
+            let circuitHTML = '<div class="circuit-display">';
+            
+            const componentIcons = [
+                components[0] ? `<div class="circuit-component c1">${components[0].icon}</div>` : '',
+                components[1] ? `<div class="circuit-component c2">${components[1].icon}</div>` : '',
+                components[2] ? `<div class="circuit-component c5">${components[2].icon}</div>` : '',
+                components[3] ? `<div class="circuit-component c3">${components[3].icon}</div>` : '',
+                components[4] ? `<div class="circuit-component c4">${components[4].icon}</div>` : ''
+            ];
+
+            const wireSegments = [
+                components[0] && components[1] ? `<div class="circuit-component wire-segment-horizontal w2" style="background-color: ${wireColor}"></div>` : '',
+                components[1] && components[3] ? `<div class="circuit-component wire-segment-vertical w3" style="background-color: ${wireColor}"></div>` : '',
+                components[3] && components[4] ? `<div class="circuit-component wire-segment-horizontal w4" style="background-color: ${wireColor}"></div>` : '',
+                components[4] && components[0] ? `<div class="circuit-component wire-segment-vertical w1" style="background-color: ${wireColor}"></div>` : '',
+            ];
+            
+            // Reorder the components and wires for the grid layout
+            circuitHTML += componentIcons[0]; // Bateria (Top-left)
+            circuitHTML += wireSegments[0]; // Wire to top-right
+            circuitHTML += componentIcons[1]; // Conductor (Top-right)
+            circuitHTML += wireSegments[1]; // Wire to bottom-right
+            circuitHTML += componentIcons[3]; // LightBulb/Switch (Bottom-right)
+            circuitHTML += wireSegments[2]; // Wire to bottom-left
+            circuitHTML += componentIcons[4]; // Motor (Bottom-left)
+            circuitHTML += wireSegments[3]; // Wire to top-left
+            circuitHTML += componentIcons[2]; // Middle element
+            
+            circuitHTML += '</div>';
+            return circuitHTML;
+        }
+
+
+        function renderFinalTest(parentEl) {
+            const circuitHTML = buildSquareCircuit();
+            parentEl.innerHTML = `
+                <div class="text-center">
+                    <h2 class="text-3xl font-bold mb-4">Twój obwód elektryczny jest gotowy!</h2>
+                    <p class="mb-6">Oto wszystkie elementy, które zebraliście. Teraz czas na test!</p>
+                    ${circuitHTML}
+                    <button onclick="testCircuit()" class="mt-8">Testuj obwód</button>
+                </div>
+            `;
+        }
+        
+        function showTaskModal(task) {
+            gameState.currentTask = task;
+            document.getElementById('task-title').innerText = 'Zadanie: ' + task.name;
+            document.getElementById('task-description').innerText = task.task;
+            document.getElementById('task-modal').classList.remove('hidden');
+        }
+
+        function showCodeModal() {
+            document.getElementById('task-modal').classList.add('hidden');
+            document.getElementById('code-input').value = '';
+            document.getElementById('code-error').classList.add('hidden');
+            document.getElementById('code-input-modal').classList.remove('hidden');
+        }
+
+        function showAdminModal() {
+            document.getElementById('code-input-modal').classList.add('hidden');
+            document.getElementById('admin-input').value = '';
+            document.getElementById('admin-error').classList.add('hidden');
+            document.getElementById('admin-input-modal').classList.remove('hidden');
+        }
+        
+        function skipTutorial() {
+            document.getElementById('tutorial-modal').classList.add('hidden');
+            startColorSelection();
+        }
+
+        function startColorSelection() {
+            gameState.history.push(gameState.stage);
+            gameState.stage = 'color_selection';
+            render();
+        }
+
+        function selectColor(color) {
+            gameState.wireColor = color;
+            document.querySelectorAll('.color-option').forEach(el => el.classList.remove('selected'));
+            document.querySelector(`.color-option[style*="${color}"]`).classList.add('selected');
+            document.getElementById('start-button').disabled = false;
+        }
+
+        function startTask1() {
+            gameState.history.push(gameState.stage);
+            gameState.stage = 'task1_choice';
+            render();
+        }
+
+        function nextTask() {
+            gameState.history.push(gameState.stage);
+            switch(gameState.stage) {
+                case 'task1_choice':
+                    gameState.stage = 'task2_choice';
+                    break;
+                case 'task2_choice':
+                    gameState.stage = 'task3_choice';
+                    break;
+                case 'task3_choice':
+                    gameState.stage = 'task4_choice';
+                    break;
+                case 'task4_choice':
+                    gameState.stage = 'task5_choice';
+                    break;
+                case 'task5_choice':
+                    gameState.stage = 'final_test';
+                    break;
+            }
+            render();
+        }
+
+        function goBack() {
+            if (gameState.history.length > 0) {
+                const prevStage = gameState.history.pop();
+                gameState.stage = prevStage;
+                if (gameState.chosenComponents.length > 0) {
+                    const lastComponent = gameState.chosenComponents.pop();
+                    gameState.correctChoices.pop();
+                    if (lastComponent.name === components.doubleWire.name) {
+                        gameState.hasDoubleWire = false;
+                    }
+                }
+                render();
+            }
+        }
+
+        function resetGame() {
+            gameState = {
+                stage: 'tutorial',
+                wireColor: '#000',
+                chosenComponents: [],
+                correctChoices: [],
+                incorrectCodeAttempts: 0,
+                hasDoubleWire: false,
+                currentTask: null,
+                maxAttempts: 3,
+                history: []
+            };
+            render();
+        }
+
+        function handleTaskChoice(taskName, componentName) {
+            const component = Object.values(components).find(comp => comp.name === componentName);
+            
+            if (componentName === components.doubleWire.name) {
+                gameState.hasDoubleWire = true;
+            }
+
+            gameState.chosenComponents.push(component);
+            gameState.correctChoices.push(component.isCorrect);
+
+            showTaskModal(component);
+        }
+
+        function submitCode() {
+            const codeInput = document.getElementById('code-input');
+            const codeError = document.getElementById('code-error');
+            
+            if (codeInput.value === KADROWIEC_CODE) {
+                document.getElementById('code-input-modal').classList.add('hidden');
+                gameState.incorrectCodeAttempts = 0;
+                nextTask();
+            } else {
+                gameState.incorrectCodeAttempts++;
+                codeError.innerText = `Niepoprawny kod! Pozostało ${gameState.maxAttempts - gameState.incorrectCodeAttempts} prób.`;
+                codeError.classList.remove('hidden');
+
+                if (gameState.incorrectCodeAttempts >= gameState.maxAttempts) {
+                    showAdminModal();
+                }
+            }
+        }
+        
+        function submitAdminCode() {
+            const adminInput = document.getElementById('admin-input');
+            const adminError = document.getElementById('admin-error');
+            
+            if (adminInput.value === ADMIN_CODE) {
+                document.getElementById('admin-input-modal').classList.add('hidden');
+                gameState.incorrectCodeAttempts = 0;
+                nextTask();
+            } else {
+                adminError.innerText = 'Niepoprawne hasło administratora!';
+                adminError.classList.remove('hidden');
+            }
+        }
+
+        function arraysEqual(a, b) {
+            return a.length === b.length && a.every((val, index) => val === b[index]);
+        }
+
+        function testCircuit() {
+            const chosenNames = gameState.chosenComponents.map(c => c.name);
+            
+            const correctPaths = [
+                [components.battery.name, components.conductor.name, components.motor.name, components.doubleWire.name, components.lightBulb.name],
+                [components.battery.name, components.conductor.name, components.motor.name, components.doubleWire.name, components.finalSwitch.name],
+                [components.battery.name, components.conductor.name, components.motor.name, components.singleWire.name, components.finalSwitch.name],
+            ];
+            
+            const isCorrectPath = correctPaths.some(path => arraysEqual(chosenNames, path));
+
+            if (isCorrectPath) {
+                showConfetti(100);
+                document.getElementById('game-content').innerHTML = `
+                    <h2 class="text-4xl font-bold text-success">Sukces! Obwód działa! 🎉</h2>
+                    <p class="text-xl mt-4">Wszystkie elementy zostały połączone poprawnie.</p>
+                `;
+                 document.getElementById('game-controls').innerHTML = `
+                    <button onclick="resetGame()">Rozpocznij od nowa</button>
+                `;
+            } else {
+                showFire();
+                let errorMessage = 'Jeden z wybranych przez Was elementów jest niepoprawny. Spróbujcie ponownie, aby stworzyć działający obwód.';
+                document.getElementById('game-content').innerHTML = `
+                    <h2 class="text-4xl font-bold text-danger">Błąd! Obwód nie działa! 🔥</h2>
+                    <p class="text-xl mt-4">${errorMessage}</p>
+                `;
+                document.getElementById('game-controls').innerHTML = `
+                    <button onclick="resetGame()">Rozpocznij od nowa</button>
+                `;
+            }
+             document.getElementById('game-controls').classList.remove('hidden');
+        }
+
+        function showConfetti(count = 50) {
+            const confettiContainer = document.createElement('div');
+            confettiContainer.classList.add('confetti-container');
+            document.body.appendChild(confettiContainer);
+            for (let i = 0; i < count; i++) {
+                const confetti = document.createElement('div');
+                confetti.classList.add('confetti');
+                confetti.style.left = `${Math.random() * 100}%`;
+                confetti.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                confetti.style.animationDelay = `${Math.random() * 2}s`;
+                confetti.style.animationDuration = `${5 + Math.random() * 5}s`;
+                confettiContainer.appendChild(confetti);
+            }
+            setTimeout(() => confettiContainer.remove(), 7000);
+        }
+
+        function showFire() {
+            const fireContainer = document.createElement('div');
+            fireContainer.classList.add('fire-container');
+            document.body.appendChild(fireContainer);
+            const gameBounds = gameEl.getBoundingClientRect();
+
+            for (let i = 0; i < 50; i++) {
+                const fireParticle = document.createElement('div');
+                fireParticle.classList.add('fire-particle');
+                fireParticle.style.left = `${Math.random() * 20}%`;
+                fireParticle.style.top = `${gameBounds.height + Math.random() * 50}px`;
+                fireParticle.style.animationDelay = `${Math.random() * 1}s`;
+                fireContainer.appendChild(fireParticle);
+
+                const fireParticleRight = document.createElement('div');
+                fireParticleRight.classList.add('fire-particle');
+                fireParticleRight.style.left = `${80 + Math.random() * 20}%`;
+                fireParticleRight.style.top = `${gameBounds.height + Math.random() * 50}px`;
+                fireParticleRight.style.animationDelay = `${Math.random() * 1}s`;
+                fireContainer.appendChild(fireParticleRight);
+            }
+            setTimeout(() => fireContainer.remove(), 5000);
+        }
+
+        window.onload = function() {
+            render();
+        };
+
+    </script>
+</body>
+</html>
